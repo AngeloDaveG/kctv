@@ -1,46 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KCTV</title>
-    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
-    <script disable-devtool-auto src='https://cdn.jsdelivr.net/npm/disable-devtool@latest'></script>
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
-    <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Logo_of_the_Korean_Central_Television.svg/1280px-Logo_of_the_Korean_Central_Television.svg.png">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KCTV</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/controls.css">
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.ui.debug.js"></script>
+  <script disable-devtool-auto src='https://cdn.jsdelivr.net/npm/disable-devtool'></script>
+  <style>
+    *{margin:0;padding:0;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;outline:none;-webkit-border:0;-moz-border:0;border:0;cursor:none;-webkit-user-select:none;-moz-user-select:none;user-select:none;}html,body{width:100vw;width:100svw;height:100vh;height:100svh;background:#000;overflow:hidden;}video{width:100vw;width:100svw;height:100vh;height:100svh;overflow:hidden}.theme-blue .shaka-controls-button-panel .material-icons-round{color:#eee}.theme-blue .shaka-overflow-menu,.theme-blue .shaka-settings-menu{background:rgba(0,0,0,0.8);border-radius:4px;}.theme-blue .shaka-overflow-menu span+span{font-size:80%;color:#fff;padding-top:2px}.theme-blue .shaka-overflow-menu button,.theme-blue .shaka-settings-menu button{color:#fff;transition:all .2s linear;}.theme-blue .shaka-overflow-menu button:hover,.theme-blue .shaka-settings-menu button:hover{background:#3275e4;cursor:auto}
+  </style>
 </head>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-	const source = 'https://tv.nknews.org/tvdash/stream.mpd';
-	const dash = dashjs.MediaPlayer().create();
-	const video = document.querySelector('video');
-	dash.initialize(video, source, true);
-	const player = new Plyr(video, {captions: {active: true, update: true}});
-	window.player = player;
-	window.dash = dash;
-});
-</script>
-<style>
-    body {
-        margin: 5;
-        background-color: black;
-    }
-    .container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        max-width: 100%;
-        overflow: hidden;
-    }
-    .container video {
-        width: 100%;
-        height: 100vh;
-    }
-</style>
 <body>
-    <div class="container">
-        <video controls autoplay poster="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Logo_of_the_Korean_Central_Television.svg/1280px-Logo_of_the_Korean_Central_Television.svg.png"></video>
-    </div>
+  <div class="theme-blue">
+    <video data-shaka-player id="video" autoplay height="1080" width="1920" preload="auto" controls
+           poster="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Logo_of_the_Korean_Central_Television.svg/1280px-Logo_of_the_Korean_Central_Television.svg.png">
+    </video>
+  </div>
+  <script>
+    const manifestUri = 'https://tv.nknews.org/tvdash/stream.mpd';
+
+    function initApp() {
+      shaka.polyfill.installAll();
+      if (shaka.Player.isBrowserSupported()){
+        init();
+      } else {
+        console.error('Browser not supported!');
+      }
+    }
+    async function init() {
+      const video = document.getElementById('video');
+      const ui = video['ui'];
+      const controls = ui.getControls();
+      const player = controls.getPlayer();
+      const config = {
+        'seekBarColors': {
+          base: 'rgba(66, 133, 244, 0.35)',
+          buffered: 'rgba(66, 133, 244, 0.6)',
+          played: 'rgba(66, 133, 244, 0.8)',
+        },
+        'volumeBarColors': {
+          base: 'rgba(66, 133, 244, 0.8)',
+          level: 'rgb(66, 133, 244)',
+        }
+      }
+      ui.configure(config);
+      window.player = player;
+      window.ui = ui;
+      window.controls = controls;
+      player.addEventListener("error", onPlayerErrorEvent);
+      controls.addEventListener("error", onUIErrorEvent);
+
+      try {
+        await player.load(manifestUri);
+        console.log('The video has now been loaded!');
+      } catch (error){
+        onPlayerError(error);
+      }
+      function onPlayerErrorEvent(errorEvent){
+        onPlayerError(event.detail);
+      }
+      function onPlayerError(error){
+        console.error('Error code', error.code + ':', 'Video could not be loaded!', '[Media not found].');
+      }
+      function onUIErrorEvent(errorEvent){
+        onPlayerError(event.detail);
+      }
+    }
+    function initFailed(errorEvent){
+      console.error('Unable to load the UI library!');
+    }
+    document.addEventListener('shaka-ui-loaded', init);
+    document.addEventListener('shaka-ui-load-failed', initFailed);
+    document.addEventListener('DOMContentLoaded', initApp);
+    Object.defineProperty(navigator, 'userAgent', {
+      get: function(){
+        return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.4044.138 Safari/537.36';
+      }
+    });
+  </script>
 </body>
 </html>

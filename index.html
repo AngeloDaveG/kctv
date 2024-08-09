@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCTV</title>
+    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
+    <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Logo_of_the_Korean_Central_Television.svg/1280px-Logo_of_the_Korean_Central_Television.svg.png">
+</head>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+	const source = 'https://tv.nknews.org/tvdash/stream.mpd';
+	const dash = dashjs.MediaPlayer().create();
+	const video = document.querySelector('video');
+	dash.initialize(video, source, true);
+	const player = new Plyr(video, {captions: {active: true, update: true}});
+	window.player = player;
+	window.dash = dash;
+});
+</script>
+<style>
+    body {
+        margin: 5;
+        background-color: black;
+    }
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    .container video {
+        width: 100%;
+        height: 100vh;
+    }
+</style>
+<body>
+    <div class="container">
+        <video controls autoplay poster="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Logo_of_the_Korean_Central_Television.svg/1280px-Logo_of_the_Korean_Central_Television.svg.png"></video>
+    </div>
+</body>
+</html>
